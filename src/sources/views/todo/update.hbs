@@ -9,18 +9,18 @@
     </head>
     <body>
         <div class = "container">
-            <form method="post" action="/todo/store">
+            <form method="POST" action="/todo/update/{{todo._id}}?_method=PUT">
                 <div class="mb-3">
                     <label for="title" class="form-label">Title</label>
-                    <input type="text" class="form-control" id="title" name ="title">
+                    <input type="text" class="form-control" id="title" name ="title" value="{{todo.title}}">
                 </div>
-            <div class="mb-3">
+                <div class="mb-3">
                     <label for="description" class="form-label">Description</label>
-                    <input type="text" class="form-control" id="description" name ="description">
+                    <input type="text" class="form-control" id="description" name ="description" value="{{todo.description}}">
                 </div>
                 <div class="mb-3">
                     <label for="status" class="form-label">Status</label>
-                    <input type="radio" id="status_true" name="status" value = "true"> True
+                    <input type="radio" id="status_true" name="status" value = "true" > True
                     <input type="radio" id="status_false" name="status" value = "false"> False
                 </div>
                 <button type="submit" class="btn btn-primary">Submit</button>
@@ -34,6 +34,6 @@
 
 <style>
     #status_true, #status_false{
-        display: block
+        display: inline-block;
     }
 </style>
