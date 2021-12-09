@@ -10,24 +10,61 @@
     </head>
     <body>
         <div class = "container">
-            <ul id="todolist">
-                {{#each todos}}
-                    <div class="card" style="width: 18rem;">
-                        <div class="card-body">
-                            <h5 class="card-title">{{this.title}}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">{{this.description}}</h6>
-                            <h6 class="card-subtitle mb-2 text-muted">{{this.status}}</h6>
-                            <a href="/todo/update/{{this._id}}" class="card-link">
-                                <button type="button" class="btn btn-info">Edit</button>
-                            </a>
-                            <a href="#" class="card-link">
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#del_modal"
-                                 data-bs-id="{{this._id}}" >Delete</button>
-                            </a> 
-                        </div>
+            <form id='container-form' method='POST' action='/todo/handlecontrol'>
+                <h3>Danh sach todolist ({{num}})</h3>
+                <div class="trash">
+                    <a class="click" href='todo/trash'>
+                        <button type="button" class="btn btn-primary mb-2">Trash Bin ({{delNum}})</button>
+                    </a>
+                    <a class="click" href='todo/create'>
+                        <button type="button" class="btn btn-primary mb-2">Create</button>
+                    </a>
+                </div>
+
+                <div id='select-block' class='d-flex'>
+                    <div id='select-block-checkall' class='select-block-div'>
+                        <input class='form-check-input' type='checkbox' id='check-all'>
+                        <label class='form-check-label' for='check-all'>Chọn tất cả</label>
                     </div>
-                {{/each}}
-            </ul>
+
+                    <div id='select-block-action' class='select-block-div'>
+                        <select name='action' required='required'>
+                            <option value=''>
+                                -- Chọn hành động --
+                            </option>
+                            <option value='delete'>
+                                Xóa 
+                            </option>
+                        </select>
+                    </div>
+
+                    <div id='select-block-btn' class='select-block-div'>
+                        <button id='submit-btn' type="button" class="btn btn-primary mb-2" disabled='disabled'>Action</button>
+                    </div>
+                </div>
+
+                
+                
+                <ul id="todolist">
+                    {{#each todos}}
+                        <div class="card" style="width: 18rem;">
+                            <div class="card-body">
+                                <input type='checkbox' class='select-item' name="todoIds" value='{{this._id}}'>
+                                <h5 class="card-title">{{this.title}}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{this.description}}</h6>
+                                <h6 class="card-subtitle mb-2 text-muted">{{this.status}}</h6>
+                                <a href="/todo/update/{{this._id}}" class="card-link">
+                                    <button type="button" class="btn btn-info">Edit</button>
+                                </a>
+                                <a href="#" class="card-link">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#del_modal"
+                                    data-bs-id="{{this._id}}" >Delete</button>
+                                </a> 
+                            </div>
+                        </div>
+                    {{/each}}
+                </ul>
+            </form>
 
 
             <div class="modal fade" id="del_modal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
@@ -53,34 +90,93 @@
             
             <script>
                 var del_modal = document.getElementById('del_modal');
+                var selectAll = $('#check-all');
+                var selectItem = $('input[name="todoIds"]');
+                var selectedValue = $('select[name="action"]');
+                var containerForm = $('#container-form');
+                var submitBtn = $('#submit-btn');
+
+                // DELETE ITEM
                 del_modal.addEventListener('show.bs.modal', function (event) {
-                var button = event.relatedTarget;
-                var id = button.getAttribute('data-bs-id');
+                    var button = event.relatedTarget;
+                    var id = button.getAttribute('data-bs-id');
+                    
+                    var del_btn = document.getElementById('del_btn');
+                    del_btn.onclick = function(event) {
+                        var form = document.getElementById('del_form');
+                        form.action = '/todo/' + id + '?_method=DELETE';
+                        form.submit();
+                    }
+                });
+
+                // SELECTALL -> SELECTITEM
+                selectAll.change( function(e) {
+                    var isCheck = $(this).is(':checked');
+                    selectItem.prop('checked', isCheck);
+                });
+
+                // SELECTITEM -> SELECTALL
+                selectItem.change(function(e) {
+                    var isSelectedAll = selectItem.length === $('input[name="todoIds"]:checked').length;
+                    selectAll.prop('checked', isSelectedAll);
+                });
+
+                // DISABLE SUBMIT BUTTON
+                // selectItem change
+                selectItem.change(function(e) {
+                    var selectedItem = $('input[name="todoIds"]:checked').length;
+                    var value = selectedValue.val();
+                    if(selectedItem > 0 && value !='')
+                    {
+                        submitBtn.attr('disabled', false);
+                    }
+                    else
+                    {
+                        submitBtn.attr('disabled', true);
+                    }
+                });
+
+                // selectAll change
+                selectAll.change(function(e) {
+                    var selectedItem = $('input[name="todoIds"]:checked').length;
+                    var value = selectedValue.val();
+                    if(selectedItem > 0 && value !='')
+                    {
+                        submitBtn.attr('disabled', false);
+                    }
+                    else
+                    {
+                        submitBtn.attr('disabled', true);
+                    }
+                });
+
+                // select action value change
+                selectedValue.change(function(e) {
+                    var selectedItem = $('input[name="todoIds"]:checked').length;
+                    var value = selectedValue.val();
+                    if(selectedItem > 0 && value !='')
+                    {
+                        submitBtn.attr('disabled', false);
+                    }
+                    else
+                    {
+                        submitBtn.attr('disabled', true);
+                    }
+                });
+
+                // SUBMIT FORM
+                submitBtn.click(function(e) {
+                    containerForm.submit();
+                })
+
+
+
+
+
+
                 
-                var del_btn = document.getElementById('del_btn');
-                del_btn.onclick = function(event) {
-                    var form = document.getElementById('del_form');
-                    form.action = '/todo/' + id + '?_method=DELETE';
-                    form.submit();
-                }
-            });
 
 
-    /*document.addEventListener('DOMContentLoaded', funtion() {
-        $('#del_modal').on('show.bs.modal', function(event){
-            console.log(event);
-            var button = $(event.relatedTarget);
-            var id = button.data('id');
-            console.log(id);
-        });
-        
-        var btn_del = document.getElementById('del_btn');
-        console.log(btn_del);
-        btn_del.onClick = function(event) {
-            form.action = '/todo/' + id + '?_method=DELETE';
-            form.submit();
-        };
-    });*/
             </script>
         </div>
 
@@ -94,6 +190,9 @@
 <style>
 .card{
     display: inline-block;
+}
+.select-block-div{
+    margin-left:1rem;
 }
 </style>
 

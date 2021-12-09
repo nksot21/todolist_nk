@@ -9,13 +9,13 @@ const todoController = {
     // find all todo_item
     get_All_Todolist: 
         (req, res, next) =>{
-            todo_Model.find()
-            .then((todos) => {
-                res.render('todo/todolist', {todos: detail_Controller.arr_To_Object(todos)});
+            Promise.all([todo_Model.countDocumentsDeleted(), todo_Model.find(), todo_Model.countDocuments() ])
+            .then(([delNum, todos, num]) => { 
+                res.render('todo/todolist', {todos: detail_Controller.arr_To_Object(todos), num, delNum})
             })
-            .catch((err =>{
-                res.json('message: err.message')
-            }))
+            .catch((err)=>{
+                res.json(err.message)
+            });
         },
 
     // [GET] : todo/create
@@ -44,7 +44,7 @@ const todoController = {
         (req, res, next) => {
             todo_Model.find({slug: req.params.slug})
             .then((todos) => {
-                res.json(todos)
+                res.render('todo/todolist', {todos: detail_Controller.arr_To_Object(todos)});
             })
             .catch((err) => {
                 res.json(err.message)
@@ -79,14 +79,76 @@ const todoController = {
     // [DELETE] : todo/:_id
     delete_Todo:
         (req, res, next) => {
-            todo_Model.findByIdAndDelete({_id: req.params._id})
+            todo_Model.delete({_id: req.params._id})
             .then((todo) => {
                 res.redirect('/todo');
             })
             .catch((err) =>{
                 res.json(err.message);
             })
-        },     
+        },   
+        
+    //[GET] :todo/trash
+    get_Trash:
+        (req, res, next) => {
+            todo_Model.findDeleted()
+            .then((todos) =>{
+                res.render('todo/trash', {todos: detail_Controller.arr_To_Object(todos)});
+            })
+            .catch((err) =>{
+                res.json(err.message);
+            })
+        },
+    
+    // [PATCH] todo/restore/:_id
+    restore:
+        (req, res, next) => {
+            todo_Model.restore({_id: req.params._id})
+            .then((result) =>{
+                res.redirect('/todo')
+            })
+            .catch((err) => {
+                res.json(err.message)
+            })
+     },
+
+    // [DELETE] todo/deletedb/:id_
+    deleteBD:
+        (req, res, next) =>{
+            todo_Model.deleteOne({_id: req.params._id})
+            .then((result) =>{
+                res.redirect('/todo/trash')
+            })
+            .catch((err) => {
+                res.json(err.message)
+            })
+        },
+    
+    // [POST] todo/handlecontrol : delete todos
+    handleControl:
+        (req, res, next) =>{
+            todo_Model.delete({_id: {$in: req.body.todoIds}})
+            .then((todo) => {
+                res.redirect('/todo');
+            })
+            .catch((err) =>{
+                res.json(err.message);
+            })
+        },
+
+    // [POST] todo/handlecontroltrash : restore
+    handleControlTrash:
+        (req, res, next) =>{
+            todo_Model.restore({_id: {$in: req.body.todoIds}})
+            .then((result) =>{
+                res.redirect('/todo')
+            })
+            .catch((err) => {
+                res.json(err.message)
+            })
+        }
 }
+
+    
 
 module.exports = todoController;
